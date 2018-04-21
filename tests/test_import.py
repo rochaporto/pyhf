@@ -33,3 +33,7 @@ def test_import_prepHistFactory():
     pars[pdf.config.par_slice('SigXsecOverSM')] = [2.0]
     assert pdf.expected_data(
         pars, include_auxdata=False).tolist() == [140, 120]
+
+def test_import_multibin_multibjets():
+    schema = json.load(open('validation/spec.json'))
+    parsed_xml = pyhf.readxml.parse('validation/multibin_multibjets/config/NormalMeasurement.xml', 'validation/multibin_multibjets/config')
