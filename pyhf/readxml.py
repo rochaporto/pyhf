@@ -3,13 +3,28 @@ import xml.etree.ElementTree as ET
 
 def import_root_histogram(rootdir, filename, path, name):
     import uproot
-    assert path == ''
+    #import pdb; pdb.set_trace()
+    #assert path == ''
+    # strip leading slashes as uproot doesn't use "/" for top-level
+    path = path.strip('/')
     f = uproot.open(os.path.join(rootdir, filename))
-    return f[name].numpy[0]
+    try:
+        return f[name].numpy[0]
+    except KeyError:
+        pass
+
+    try:
+        return f[os.path.join(path, name)].numpy[0]
+    except KeyError:
+        pass
+
+    raise KeyError('Both {0:s} and {1:s} were tried and not found in {2:s}'.format(name, os.path.join(path, name), os.path.join(rootdir, filename)))
 
 def process_sample(sample,rootdir,inputfile, histopath):
-    inputfile = inputfile or sample.attrib.get('InputFile')
-    histopath = histopath or sample.attrib.get('HistoPath')
+    if 'InputFile' in sample.attrib:
+       inputfile = sample.attrib.get('InputFile')
+    if 'HistoPath' in sample.attrib:
+        histopath = sample.attrib.get('HistoPath')
     histoname = sample.attrib['HistoName']
 
     modifiers = []
@@ -35,9 +50,10 @@ def process_sample(sample,rootdir,inputfile, histopath):
     }
 
 def process_data(sample,rootdir,inputfile, histopath):
-
-    inputfile = inputfile or sample.attrib.get('InputFile')
-    histopath = histopath or sample.attrib.get('HistoPath')
+    if 'InputFile' in sample.attrib:
+       inputfile = sample.attrib.get('InputFile')
+    if 'HistoPath' in sample.attrib:
+        histopath = sample.attrib.get('HistoPath')
     histoname = sample.attrib['HistoName']
 
     return import_root_histogram(rootdir, inputfile, histopath, histoname)
