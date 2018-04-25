@@ -11,6 +11,7 @@ class scipy_optimizer(object):
         result = minimize(objective, init_pars, method='SLSQP',
                           args=(data, pdf), bounds=par_bounds)
         try:
+            print('ran unconstrained fit', result)
             assert result.success
         except AssertionError:
             log.error(result)
@@ -25,6 +26,7 @@ class scipy_optimizer(object):
         result = minimize(objective, init_pars, constraints=cons,
                           method='SLSQP', args=(data, pdf), bounds=par_bounds)
         try:
+            print('ran constrained fit', result)
             assert result.success
         except AssertionError:
             log.error(result)

@@ -268,18 +268,26 @@ class hfpdf(object):
         return tensorlib.concatenate(tocat)
 
     def constraint_logpdf(self, auxdata, pars):
-        # iterate over all constraints order doesn't matter....
-        start_index = 0
         summands = None
+        start_index = 0
+
+        thisd, thismu, thissig = [], [], []
         for cname in self.config.auxdata_order:
-            modifier, modslice = self.config.modifier(cname), \
-                self.config.par_slice(cname)
+            modifier, modslice = self.config.modifier(cname), self.config.par_slice(cname)
             modalphas = modifier.alphas(pars[modslice])
             end_index = start_index + int(modalphas.shape[0])
             thisauxdata = auxdata[start_index:end_index]
             start_index = end_index
-            constraint_term = tensorlib.log(modifier.pdf(thisauxdata, modalphas))
-            summands = constraint_term if summands is None else tensorlib.concatenate([summands,constraint_term])
+
+            modmu, modsig = modifier.pdfpars(pars[modslice])
+            thisd.append(thisauxdata)
+            thismu.append(modmu)
+            thissig.append(modsig)
+
+        cx, cmu, csig = tensorlib.concatenate(thisd), tensorlib.concatenate(thismu), tensorlib.concatenate(thissig)
+        what = tensorlib.normal(cx, cmu,csig)
+        constraint_term = tensorlib.log(what)
+        summands = constraint_term if summands is None else tensorlib.concatenate([summands,constraint_term])
         return tensorlib.sum(summands) if summands is not None else 0
 
     def logpdf(self, pars, data):
